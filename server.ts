@@ -66,49 +66,75 @@ async function startServer() {
     }
   };
 
+// Database Adapter to support both local SQLite and Cloudflare D1
+const getDb = (req: any) => {
+  // If running on Cloudflare, the DB binding is usually in req.env or similar
+  // For standard Express on Node, we use the local better-sqlite3 instance
+  return db;
+};
+
+async function startServer() {
+  const app = express();
+  app.use(express.json());
+
   // API Routes
-  app.post('/api/login', async (req, res) => {
-    const { username, password } = req.body;
-    const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
-    if (user && bcrypt.compareSync(password, user.password)) {
-      const token = await new jose.SignJWT({ id: user.id, username: user.username })
-        .setProtectedHeader({ alg: 'HS256' })
-        .setIssuedAt()
-        .setExpirationTime('24h')
-        .sign(JWT_SECRET);
-      res.json({ token });
-    } else {
-      res.status(401).json({ error: 'Invalid credentials' });
+  app.get('/api/posts', async (req, res) => {
+    try {
+      // Local better-sqlite3 is synchronous
+      const posts = db.prepare('SELECT * FROM posts ORDER BY date DESC').all();
+      res.json(posts);
+    } catch (err) {
+      res.status(500).json({ error: 'Database error' });
     }
   });
 
-  app.get('/api/posts', (req, res) => {
-    const posts = db.prepare('SELECT * FROM posts ORDER BY date DESC').all();
-    res.json(posts);
+  app.get('/api/posts/:id', async (req, res) => {
+    try {
+      const post = db.prepare('SELECT * FROM posts WHERE id = ?').get(req.params.id);
+      if (post) {
+        res.json(post);
+      } else {
+        res.status(404).json({ error: 'Post not found' });
+      }
+    } catch (err) {
+      res.status(500).json({ error: 'Database error' });
+    }
   });
 
-  app.post('/api/posts', authenticate, (req, res) => {
+  app.post('/api/posts', authenticate, async (req, res) => {
     const { title_cn, title_en, excerpt_cn, excerpt_en, content_cn, content_en, category_cn, category_en, image } = req.body;
     const date = new Date().toISOString().split('T')[0].replace(/-/g, '.');
-    const result = db.prepare(`
-      INSERT INTO posts (title_cn, title_en, excerpt_cn, excerpt_en, content_cn, content_en, category_cn, category_en, image, date)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(title_cn, title_en, excerpt_cn, excerpt_en, content_cn, content_en, category_cn, category_en, image, date);
-    res.json({ id: result.lastInsertRowid });
+    try {
+      const result = db.prepare(`
+        INSERT INTO posts (title_cn, title_en, excerpt_cn, excerpt_en, content_cn, content_en, category_cn, category_en, image, date)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(title_cn, title_en, excerpt_cn, excerpt_en, content_cn, content_en, category_cn, category_en, image, date);
+      res.json({ id: result.lastInsertRowid });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to create post' });
+    }
   });
 
-  app.put('/api/posts/:id', authenticate, (req, res) => {
+  app.put('/api/posts/:id', authenticate, async (req, res) => {
     const { title_cn, title_en, excerpt_cn, excerpt_en, content_cn, content_en, category_cn, category_en, image, published } = req.body;
-    db.prepare(`
-      UPDATE posts SET title_cn=?, title_en=?, excerpt_cn=?, excerpt_en=?, content_cn=?, content_en=?, category_cn=?, category_en=?, image=?, published=?
-      WHERE id = ?
-    `).run(title_cn, title_en, excerpt_cn, excerpt_en, content_cn, content_en, category_cn, category_en, image, published, req.params.id);
-    res.json({ success: true });
+    try {
+      db.prepare(`
+        UPDATE posts SET title_cn=?, title_en=?, excerpt_cn=?, excerpt_en=?, content_cn=?, content_en=?, category_cn=?, category_en=?, image=?, published=?
+        WHERE id = ?
+      `).run(title_cn, title_en, excerpt_cn, excerpt_en, content_cn, content_en, category_cn, category_en, image, published, req.params.id);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to update post' });
+    }
   });
 
-  app.delete('/api/posts/:id', authenticate, (req, res) => {
-    db.prepare('DELETE FROM posts WHERE id = ?').run(req.params.id);
-    res.json({ success: true });
+  app.delete('/api/posts/:id', authenticate, async (req, res) => {
+    try {
+      db.prepare('DELETE FROM posts WHERE id = ?').run(req.params.id);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to delete post' });
+    }
   });
 
   app.post('/api/translate', authenticate, async (req, res) => {
