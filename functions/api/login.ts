@@ -1,9 +1,8 @@
 import * as jose from 'jose';
 import bcrypt from 'bcryptjs';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'dao-secret-key');
-
-export const onRequestPost: PagesFunction<{ DB: D1Database }> = async ({ request, env }) => {
+export const onRequestPost: PagesFunction<{ DB: D1Database; JWT_SECRET?: string }> = async ({ request, env }) => {
+  const JWT_SECRET = new TextEncoder().encode(env.JWT_SECRET || 'dao-secret-key');
   try {
     const { username, password } = await request.json() as any;
     

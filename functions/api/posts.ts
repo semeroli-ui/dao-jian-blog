@@ -1,10 +1,9 @@
 import * as jose from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'dao-secret-key');
-
-async function authenticate(request: Request) {
+async function authenticate(request: Request, env: { JWT_SECRET?: string }) {
   const token = request.headers.get('Authorization')?.split(' ')[1];
   if (!token) return null;
+  const JWT_SECRET = new TextEncoder().encode(env.JWT_SECRET || 'dao-secret-key');
   try {
     const { payload } = await jose.jwtVerify(token, JWT_SECRET);
     return payload;
@@ -20,8 +19,8 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async ({ env }) =
   });
 };
 
-export const onRequestPost: PagesFunction<{ DB: D1Database }> = async ({ request, env }) => {
-  const user = await authenticate(request);
+export const onRequestPost: PagesFunction<{ DB: D1Database; JWT_SECRET?: string }> = async ({ request, env }) => {
+  const user = await authenticate(request, env);
   if (!user) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
