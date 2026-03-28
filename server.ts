@@ -39,9 +39,14 @@ db.exec(`
 
 // Seed Admin
 const admin = db.prepare('SELECT * FROM users WHERE username = ?').get('admin');
+const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
 if (!admin) {
-  const hash = bcrypt.hashSync('admin123', 10);
+  const hash = bcrypt.hashSync(adminPassword, 10);
   db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run('admin', hash);
+} else if (process.env.ADMIN_PASSWORD) {
+  // Update password if environment variable is set
+  const hash = bcrypt.hashSync(adminPassword, 10);
+  db.prepare('UPDATE users SET password = ? WHERE username = ?').run(hash, 'admin');
 }
 
 async function startServer() {

@@ -73,7 +73,11 @@
 
 .mist-blur {
   backdrop-filter: blur(8px);
-  background: rgba(245, 242, 237, 0.7);
+  background: rgba(245, 242, 237, 0.8);
+}
+
+.dark .mist-blur {
+  background: rgba(18, 18, 18, 0.8);
 }
 
 .writing-vertical-rl {

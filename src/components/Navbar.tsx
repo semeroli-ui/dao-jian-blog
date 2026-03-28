@@ -13,7 +13,7 @@ interface NavbarProps {
 
 export const Navbar = ({ theme, toggleTheme, lang, toggleLang, t }: NavbarProps) => {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-between items-center mist-blur border-b border-ink/5 transition-colors duration-500">
+    <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-between items-center mist-blur border-b border-ink/5 transition-colors duration-500 text-ink">
       <div className="flex items-center gap-3 group cursor-pointer">
         <DaoIcon className="w-8 h-8 transition-transform duration-500 group-hover:rotate-180" />
         <span className="font-serif text-xl tracking-widest uppercase">Dao Insight</span>
