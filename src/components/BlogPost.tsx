@@ -58,6 +58,10 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
   const content = lang === 'cn' ? post.content_cn : post.content_en;
   const category = lang === 'cn' ? post.category_cn : post.category_en;
 
+  // Calculate reading time
+  const wordCount = content?.length || 0;
+  const readingTime = Math.ceil(wordCount / (lang === 'cn' ? 300 : 200));
+
   return (
     <div className="min-h-screen bg-paper transition-colors duration-500">
       <Navbar 
@@ -87,7 +91,7 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="flex items-center gap-6 mb-8"
+              className="flex flex-wrap items-center gap-6 mb-8"
             >
               <button 
                 onClick={() => onNavClick(category)}
@@ -100,13 +104,17 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
                 <Calendar className="w-3 h-3" />
                 {post.date}
               </div>
+              <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] font-bold text-ink/40">
+                <span className="w-1 h-1 bg-ink/20 rounded-full" />
+                {readingTime} {lang === 'cn' ? '分钟阅读' : 'min read'}
+              </div>
             </motion.div>
 
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-5xl md:text-7xl font-serif leading-tight mb-12"
+              className="text-5xl md:text-7xl font-serif leading-tight mb-12 tracking-tight"
             >
               {title}
             </motion.h1>
@@ -115,12 +123,13 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, duration: 0.8 }}
-              className="aspect-[21/9] rounded-sm overflow-hidden mb-16 grayscale hover:grayscale-0 transition-all duration-1000"
+              className="aspect-[21/9] rounded-sm overflow-hidden mb-16 grayscale hover:grayscale-0 transition-all duration-1000 group relative"
             >
+              <div className="absolute inset-0 bg-ink/5 group-hover:bg-transparent transition-colors duration-1000 z-10" />
               <img 
                 src={post.image} 
                 alt={title} 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-1000"
                 referrerPolicy="no-referrer"
               />
             </motion.div>
@@ -132,7 +141,7 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
             transition={{ delay: 0.4 }}
             className="prose prose-ink dark:prose-invert max-w-none"
           >
-            <div className="markdown-body">
+            <div className="markdown-body drop-cap">
               <Markdown>{content}</Markdown>
             </div>
           </motion.div>

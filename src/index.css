@@ -40,31 +40,105 @@
 
 /* Typography for Blog Content */
 .prose, .markdown-body {
-  @apply max-w-none;
+  @apply max-w-none font-serif;
 }
 
 .prose p, .markdown-body p {
-  @apply mb-6 text-lg md:text-xl font-serif leading-relaxed opacity-90;
+  @apply mb-8 text-lg md:text-xl leading-relaxed opacity-90 text-justify;
+  letter-spacing: 0.01em;
+}
+
+.prose h1, .markdown-body h1 {
+  @apply text-4xl md:text-5xl lg:text-6xl mt-16 mb-8 font-serif font-medium tracking-tight;
 }
 
 .prose h2, .markdown-body h2 {
-  @apply text-3xl md:text-4xl mt-12 mb-6 font-serif;
+  @apply text-3xl md:text-4xl mt-14 mb-6 font-serif font-medium border-b border-moss/10 pb-2;
+}
+
+.prose h3, .markdown-body h3 {
+  @apply text-2xl md:text-3xl mt-10 mb-4 font-serif font-medium;
 }
 
 .prose blockquote, .markdown-body blockquote {
-  @apply border-l-4 border-moss pl-6 italic my-12 text-2xl opacity-80;
+  @apply border-l-2 border-moss/40 pl-8 italic my-12 text-xl md:text-2xl opacity-80 font-serif;
+  background: linear-gradient(to right, var(--mist), transparent);
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.prose ul, .markdown-body ul {
+  @apply list-disc list-outside mb-8 pl-6 space-y-3 opacity-90;
+}
+
+.prose ol, .markdown-body ol {
+  @apply list-decimal list-outside mb-8 pl-6 space-y-3 opacity-90;
+}
+
+.prose li, .markdown-body li {
+  @apply text-lg md:text-xl leading-relaxed;
+}
+
+.prose strong, .markdown-body strong {
+  @apply font-semibold text-moss;
+}
+
+.prose em, .markdown-body em {
+  @apply italic opacity-90;
+}
+
+.prose table, .markdown-body table {
+  @apply w-full my-12 border-collapse text-left overflow-hidden rounded-sm;
+}
+
+.prose th, .markdown-body th {
+  @apply py-4 px-6 bg-mist/50 font-serif font-medium border-b border-moss/20 text-lg;
+}
+
+.prose td, .markdown-body td {
+  @apply py-4 px-6 border-b border-moss/10 text-lg opacity-90;
+}
+
+.prose img, .markdown-body img {
+  @apply rounded-sm shadow-xl my-12 mx-auto max-w-full;
+}
+
+.prose hr, .markdown-body hr {
+  @apply my-16 border-t border-moss/20 w-1/3 mx-auto;
+}
+
+/* Drop Cap Effect */
+.drop-cap p:first-of-type::first-letter {
+  @apply font-serif text-6xl md:text-7xl float-left mr-4 mt-2 leading-none font-medium text-moss;
+}
+
+.dark .drop-cap p:first-of-type::first-letter {
+  @apply text-accent;
 }
 
 .dark .prose p, .dark .markdown-body p {
   @apply text-paper/90;
 }
 
-.dark .prose h2, .dark .markdown-body h2 {
+.dark .prose h1, .dark .prose h2, .dark .prose h3, .dark .markdown-body h1, .dark .markdown-body h2, .dark .markdown-body h3 {
   @apply text-paper;
+}
+
+.dark .prose strong, .dark .markdown-body strong {
+  @apply text-accent;
 }
 
 .dark .prose blockquote, .dark .markdown-body blockquote {
   @apply border-moss/50 text-paper/80;
+  background: linear-gradient(to right, rgba(255,255,255,0.05), transparent);
+}
+
+.dark .prose th, .dark .markdown-body th {
+  @apply bg-white/5 border-white/10;
+}
+
+.dark .prose td, .dark .markdown-body td {
+  @apply border-white/5;
 }
 
 .ink-gradient {
