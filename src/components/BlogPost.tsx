@@ -127,6 +127,11 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
   const wordCount = finalContent?.length || 0;
   const readingTime = Math.ceil(wordCount / (lang === 'cn' ? 300 : 200));
 
+  // Pre-process content to ensure Mermaid blocks are correctly identified
+  const processedContent = finalContent.replace(/```mermaid\s*([\s\S]*?)```/g, (match, p1) => {
+    return `\n\n\`\`\`mermaid\n${p1.trim()}\n\`\`\`\n\n`;
+  });
+
   return (
     <div className="min-h-screen bg-paper transition-colors duration-500 relative overflow-hidden">
       {/* Aesthetic Background Elements */}
@@ -257,10 +262,21 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
                   },
                   code({ node, inline, className, children, ...props }: any) {
                     const content = String(children).trim();
-                    const isMermaid = className?.includes('language-mermaid') || content.startsWith('graph ') || content.startsWith('sequenceDiagram');
+                    // More robust Mermaid detection
+                    const isMermaid = className?.includes('language-mermaid') || 
+                                     content.startsWith('graph ') || 
+                                     content.startsWith('graph TD') ||
+                                     content.startsWith('sequenceDiagram') ||
+                                     content.startsWith('pie') ||
+                                     content.startsWith('gantt');
                     
                     if (!inline && isMermaid) {
-                      const chart = content.replace(/^```mermaid\n?/, '').replace(/\n?```$/, '');
+                      // Clean the chart code
+                      const chart = content
+                        .replace(/^mermaid\n?/, '')
+                        .replace(/^```mermaid\n?/, '')
+                        .replace(/\n?```$/, '')
+                        .trim();
                       return <Mermaid chart={chart} />;
                     }
                     return (
@@ -271,7 +287,7 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
                   }
                 }}
               >
-                {finalContent}
+                {processedContent}
               </Markdown>
 
               {frontmatter.golden_sentence && (

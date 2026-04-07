@@ -14,12 +14,12 @@
 
 :root {
   --ink: #1A1A1A;
-  --paper: #F5F2ED;
-  --mist: #E5E1DA;
+  --paper: #FDFCF8;
+  --mist: #F2F0E9;
 }
 
 .dark {
-  --ink: #F5F2ED;
+  --ink: #E5E1DA;
   --paper: #121212;
   --mist: #1E1E1E;
 }
