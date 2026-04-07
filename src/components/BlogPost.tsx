@@ -69,7 +69,18 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
   const navigate = useNavigate();
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const t = translations[lang];
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = (window.scrollY / totalHeight) * 100;
+      setScrollProgress(progress);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -131,6 +142,14 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
         onNavClick={onNavClick}
         onSubscribe={onSubscribe}
       />
+
+      {/* Reading Progress Bar */}
+      <div className="fixed top-[72px] left-0 w-full h-[2px] bg-moss/5 z-50">
+        <motion.div 
+          className="h-full bg-moss"
+          style={{ width: `${scrollProgress}%` }}
+        />
+      </div>
       
       <main className="pt-32 pb-24 px-6 relative z-10">
         <article className="max-w-3xl mx-auto">
@@ -224,23 +243,25 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
                 components={{
                   h2({ children, node }: any) {
                     const icons = [Home, Zap, Target, Compass];
-                    // Find index of this h2 among all h2s in the content
                     const h2Index = (node?.position?.start?.line || 0) % icons.length;
                     const Icon = icons[h2Index];
                     
                     return (
-                      <h2 className="flex items-center gap-4">
-                        <span className="w-10 h-10 bg-moss/5 border border-moss/10 rounded-sm flex items-center justify-center text-moss">
-                          <Icon className="w-5 h-5" />
+                      <h2 className="flex items-center gap-5 group">
+                        <span className="w-12 h-12 bg-moss/5 border border-moss/10 rounded-sm flex items-center justify-center text-moss shadow-sm group-hover:bg-moss/10 transition-colors">
+                          <Icon className="w-6 h-6" />
                         </span>
-                        {children}
+                        <span className="flex-1">{children}</span>
                       </h2>
                     );
                   },
                   code({ node, inline, className, children, ...props }: any) {
-                    const match = /language-(\w+)/.exec(className || '');
-                    if (!inline && match && match[1] === 'mermaid') {
-                      return <Mermaid chart={String(children).replace(/\n$/, '')} />;
+                    const content = String(children).trim();
+                    const isMermaid = className?.includes('language-mermaid') || content.startsWith('graph ') || content.startsWith('sequenceDiagram');
+                    
+                    if (!inline && isMermaid) {
+                      const chart = content.replace(/^```mermaid\n?/, '').replace(/\n?```$/, '');
+                      return <Mermaid chart={chart} />;
                     }
                     return (
                       <code className={className} {...props}>
