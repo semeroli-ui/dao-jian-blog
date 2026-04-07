@@ -40,64 +40,29 @@
 
 /* Typography for Blog Content */
 .prose, .markdown-body {
-  @apply max-w-none font-serif;
+  @apply max-w-none font-serif break-words;
+  overflow-wrap: break-word;
 }
 
 .prose p, .markdown-body p {
-  @apply mb-8 text-lg md:text-xl leading-relaxed opacity-90 text-justify;
+  @apply mb-8 text-lg md:text-xl leading-[1.8] opacity-90 text-justify whitespace-normal;
   letter-spacing: 0.01em;
 }
 
 .prose h1, .markdown-body h1 {
-  @apply text-4xl md:text-5xl lg:text-6xl mt-16 mb-8 font-serif font-medium tracking-tight;
+  @apply text-4xl md:text-5xl lg:text-6xl mt-16 mb-8 font-serif font-medium tracking-tight leading-tight;
 }
 
 .prose h2, .markdown-body h2 {
-  @apply text-3xl md:text-4xl mt-14 mb-6 font-serif font-medium border-b border-moss/10 pb-2;
+  @apply text-3xl md:text-4xl mt-14 mb-6 font-serif font-medium border-b border-moss/10 pb-2 flex items-center gap-4;
 }
 
 .prose h3, .markdown-body h3 {
-  @apply text-2xl md:text-3xl mt-10 mb-4 font-serif font-medium;
+  @apply text-2xl md:text-3xl mt-10 mb-4 font-serif font-medium opacity-90;
 }
 
-.prose blockquote, .markdown-body blockquote {
-  @apply border-l-2 border-moss/40 pl-8 italic my-12 text-xl md:text-2xl opacity-80 font-serif;
-  background: linear-gradient(to right, var(--mist), transparent);
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-}
-
-.prose ul, .markdown-body ul {
-  @apply list-disc list-outside mb-8 pl-6 space-y-3 opacity-90;
-}
-
-.prose ol, .markdown-body ol {
-  @apply list-decimal list-outside mb-8 pl-6 space-y-3 opacity-90;
-}
-
-.prose li, .markdown-body li {
-  @apply text-lg md:text-xl leading-relaxed;
-}
-
-.prose strong, .markdown-body strong {
-  @apply font-semibold text-moss;
-}
-
-.prose em, .markdown-body em {
-  @apply italic opacity-90;
-}
-
-.prose h1, .markdown-body h1 { @apply text-4xl font-serif mb-8 text-ink leading-tight; }
-.prose h2, .markdown-body h2 { @apply text-2xl font-serif mt-16 mb-6 text-ink flex items-center gap-3; }
-.prose h3, .markdown-body h3 { @apply text-xl font-serif mt-12 mb-4 text-ink opacity-90; }
-
-.prose p, .markdown-body p { @apply mb-6 leading-[1.8] text-lg text-ink/80 font-serif; }
-
-.prose ul, .markdown-body ul { @apply mb-8 space-y-3; }
-.prose li, .markdown-body li { @apply relative pl-6 text-lg text-ink/80 font-serif; }
-.prose li::before, .markdown-body li::before {
-  content: "•";
-  @apply absolute left-0 text-moss font-bold;
+.prose pre, .markdown-body pre {
+  @apply max-w-full overflow-x-auto whitespace-pre-wrap break-words bg-moss/[0.02] p-6 rounded-sm border border-moss/10 my-8;
 }
 
 .prose blockquote, .markdown-body blockquote {
@@ -110,6 +75,19 @@
 .prose blockquote::after, .markdown-body blockquote::after {
   content: "”";
   @apply block text-6xl text-moss/20 font-serif mt-[-10px];
+}
+
+.prose ul, .markdown-body ul {
+  @apply list-none mb-8 space-y-3 opacity-90;
+}
+
+.prose li, .markdown-body li {
+  @apply relative pl-8 text-lg md:text-xl leading-relaxed;
+}
+
+.prose li::before, .markdown-body li::before {
+  content: "•";
+  @apply absolute left-0 text-moss font-bold text-2xl leading-none top-1;
 }
 
 .prose table, .markdown-body table {

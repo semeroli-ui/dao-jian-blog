@@ -13,33 +13,47 @@ import mermaid from 'mermaid';
 
 // Mermaid component to render diagrams
 const Mermaid = ({ chart }: { chart: string }) => {
-  const ref = useRef<HTMLDivElement>(null);
+  const [svg, setSvg] = useState<string>('');
+  const [error, setError] = useState<boolean>(false);
 
   useEffect(() => {
-    if (ref.current) {
-      mermaid.initialize({ 
-        startOnLoad: true, 
-        theme: 'base',
-        securityLevel: 'loose',
-        fontFamily: 'Noto Serif SC, serif',
-        themeVariables: {
-          primaryColor: '#2D4B44',
-          primaryTextColor: '#FDFCF8',
-          primaryBorderColor: '#2D4B44',
-          lineColor: '#2D4B44',
-          secondaryColor: '#E8F0EE',
-          tertiaryColor: '#FDFCF8',
-          fontSize: '14px'
-        }
-      });
-      mermaid.contentLoaded();
-    }
+    const renderChart = async () => {
+      if (!chart) return;
+      try {
+        const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
+        mermaid.initialize({ 
+          startOnLoad: false, 
+          theme: 'base',
+          securityLevel: 'loose',
+          fontFamily: 'Noto Serif SC, serif',
+          themeVariables: {
+            primaryColor: '#5A5A40',
+            primaryTextColor: '#F5F2ED',
+            primaryBorderColor: '#5A5A40',
+            lineColor: '#5A5A40',
+            secondaryColor: '#E5E1DA',
+            tertiaryColor: '#F5F2ED',
+            fontSize: '16px'
+          }
+        });
+        const { svg: renderedSvg } = await mermaid.render(id, chart);
+        setSvg(renderedSvg);
+        setError(false);
+      } catch (err) {
+        console.error('Mermaid render error:', err);
+        setError(true);
+      }
+    };
+    renderChart();
   }, [chart]);
 
+  if (error) return <pre className="text-xs text-red-500 p-4 bg-red-50 overflow-x-auto">{chart}</pre>;
+
   return (
-    <div className="mermaid flex justify-center my-16 overflow-x-auto" ref={ref}>
-      {chart}
-    </div>
+    <div 
+      className="mermaid-container flex justify-center my-16 overflow-x-auto w-full" 
+      dangerouslySetInnerHTML={{ __html: svg || '<div class="animate-pulse h-40 bg-moss/5 w-full rounded-sm"></div>' }}
+    />
   );
 };
 
@@ -95,7 +109,7 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
 
   // Strip frontmatter and <!--more-->
   const { data: frontmatter, content: cleanContent } = matter(rawContent || '');
-  const finalContent = cleanContent.replace(/<!--more-->/g, '');
+  const finalContent = cleanContent.replace(/<!--more-->/g, '').trim();
   const summary = lang === 'cn' ? frontmatter.summary_cn || frontmatter.summary : frontmatter.summary_en || frontmatter.summary;
 
   // Calculate reading time
