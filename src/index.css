@@ -10,18 +10,21 @@
   --color-moss: #5A5A40;
   --color-mist: var(--mist);
   --color-accent: #D4AF37; /* Gold accent */
+  --color-accent-green: var(--accent-green);
 }
 
 :root {
   --ink: #1A1A1A;
   --paper: #FDFCF8;
   --mist: #F2F0E9;
+  --accent-green: #00896C; /* Vibrant traditional green */
 }
 
 .dark {
   --ink: #E5E1DA;
   --paper: #121212;
   --mist: #1E1E1E;
+  --accent-green: #00A86B;
 }
 
 @layer base {
@@ -55,11 +58,16 @@
 }
 
 .prose h2, .markdown-body h2 {
-  @apply text-3xl md:text-4xl mt-20 mb-8 font-serif font-medium border-b border-moss/10 pb-4 flex items-center gap-5 text-ink;
+  @apply text-3xl md:text-4xl mt-24 mb-10 font-serif font-medium border-b border-moss/10 pb-6 flex items-center gap-6 text-ink;
 }
 
 .prose h3, .markdown-body h3 {
-  @apply text-2xl md:text-3xl mt-14 mb-6 font-serif font-medium opacity-90 text-ink;
+  @apply text-2xl md:text-3xl mt-16 mb-8 font-serif font-medium text-ink/80 flex items-center gap-3;
+}
+
+.prose h3::before, .markdown-body h3::before {
+  content: "";
+  @apply w-2 h-2 bg-accent-green rounded-full;
 }
 
 .prose pre, .markdown-body pre {
@@ -67,41 +75,41 @@
 }
 
 .prose blockquote, .markdown-body blockquote {
-  @apply my-12 p-8 bg-moss/[0.02] border-l-0 relative italic text-2xl font-serif text-ink/60 leading-relaxed text-center;
+  @apply my-16 p-10 bg-accent-green/[0.03] border-l-0 relative italic text-2xl font-serif text-accent-green leading-relaxed text-center rounded-sm;
 }
 .prose blockquote::before, .markdown-body blockquote::before {
   content: "“";
-  @apply block text-6xl text-moss/20 font-serif mb-[-20px];
+  @apply block text-6xl text-accent-green/20 font-serif mb-[-20px];
 }
 .prose blockquote::after, .markdown-body blockquote::after {
   content: "”";
-  @apply block text-6xl text-moss/20 font-serif mt-[-10px];
+  @apply block text-6xl text-accent-green/20 font-serif mt-[-10px];
 }
 
 .prose ul, .markdown-body ul {
-  @apply list-none mb-8 space-y-3 opacity-90;
+  @apply list-none mb-10 space-y-4 opacity-95;
 }
 
 .prose li, .markdown-body li {
-  @apply relative pl-8 text-lg md:text-xl leading-relaxed;
+  @apply relative pl-8 text-lg md:text-xl leading-relaxed text-ink/90;
 }
 
 .prose li::before, .markdown-body li::before {
   content: "•";
-  @apply absolute left-0 text-moss font-bold text-2xl leading-none top-1;
+  @apply absolute left-0 text-accent-green font-bold text-3xl leading-none -top-1;
 }
 
 .prose table, .markdown-body table {
   @apply w-full my-16 border-collapse text-left overflow-hidden rounded-sm;
-  background: transparent;
+  background: rgba(0, 137, 108, 0.02);
 }
 
 .prose th, .markdown-body th {
-  @apply py-6 px-6 bg-moss/5 font-serif font-bold border-b-2 border-moss/20 text-sm uppercase tracking-widest text-moss;
+  @apply py-6 px-6 bg-accent-green/10 font-serif font-bold border-b-2 border-accent-green/20 text-sm uppercase tracking-widest text-accent-green;
 }
 
 .prose td, .markdown-body td {
-  @apply py-5 px-6 border-b border-moss/5 text-lg opacity-80 font-serif leading-relaxed;
+  @apply py-5 px-6 border-b border-accent-green/5 text-lg text-ink/80 font-serif leading-relaxed;
 }
 
 .prose img, .markdown-body img {
@@ -153,15 +161,28 @@
 
 /* Abstract Section Styling */
 .abstract-container {
-  @apply flex gap-8 items-start mb-20 py-10 border-y border-moss/10;
+  @apply mb-24 py-12 border-y border-moss/10 relative;
+}
+
+.abstract-title {
+  @apply text-2xl font-serif font-medium mb-8 flex flex-col gap-2;
+}
+
+.abstract-title::after {
+  content: "";
+  @apply w-12 h-1 bg-accent-green;
+}
+
+.abstract-content-wrapper {
+  @apply flex gap-10 items-start;
 }
 
 .abstract-drop-cap {
-  @apply text-8xl font-serif text-moss leading-none select-none pt-2;
+  @apply text-9xl font-serif text-accent-green leading-none select-none pt-2 opacity-80;
 }
 
-.abstract-content {
-  @apply flex-1;
+.abstract-text {
+  @apply flex-1 text-xl md:text-2xl font-serif italic leading-[1.8] text-ink/80;
 }
 
 .golden-sentence {

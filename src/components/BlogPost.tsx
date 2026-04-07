@@ -27,13 +27,19 @@ const Mermaid = ({ chart }: { chart: string }) => {
           securityLevel: 'loose',
           fontFamily: 'Noto Serif SC, serif',
           themeVariables: {
-            primaryColor: '#5A5A40',
-            primaryTextColor: '#F5F2ED',
-            primaryBorderColor: '#5A5A40',
-            lineColor: '#5A5A40',
-            secondaryColor: '#E5E1DA',
-            tertiaryColor: '#F5F2ED',
-            fontSize: '16px'
+            primaryColor: '#00896C',
+            primaryTextColor: '#FFFFFF',
+            primaryBorderColor: '#00896C',
+            lineColor: '#00896C',
+            secondaryColor: '#F2F0E9',
+            tertiaryColor: '#FFFFFF',
+            fontSize: '16px',
+            mainBkg: '#00896C',
+            nodeBorder: '#00896C',
+            clusterBkg: '#F2F0E9',
+            titleColor: '#00896C',
+            edgeLabelBackground: '#FDFCF8',
+            nodeRadius: '4px'
           }
         });
         const { svg: renderedSvg } = await mermaid.render(id, chart);
@@ -127,10 +133,13 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
   const wordCount = finalContent?.length || 0;
   const readingTime = Math.ceil(wordCount / (lang === 'cn' ? 300 : 200));
 
-  // Pre-process content to ensure Mermaid blocks are correctly identified
-  const processedContent = finalContent.replace(/```mermaid\s*([\s\S]*?)```/g, (match, p1) => {
-    return `\n\n\`\`\`mermaid\n${p1.trim()}\n\`\`\`\n\n`;
-  });
+  // Pre-process content to ensure Mermaid blocks and Tables are correctly identified
+  const processedContent = finalContent
+    .replace(/```mermaid\s*([\s\S]*?)```/g, (match, p1) => {
+      return `\n\n\`\`\`mermaid\n${p1.trim()}\n\`\`\`\n\n`;
+    })
+    // Fix tables that might be missing newlines before them
+    .replace(/([^\n])\n\|/g, '$1\n\n|');
 
   return (
     <div className="min-h-screen bg-paper transition-colors duration-500 relative overflow-hidden">
@@ -208,14 +217,14 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
                 transition={{ delay: 0.25 }}
                 className="abstract-container"
               >
-                <div className="abstract-drop-cap">“</div>
-                <div className="abstract-content">
-                  <div className="text-[10px] uppercase tracking-[0.3em] font-bold text-moss/40 mb-4">
-                    {lang === 'cn' ? '文章摘要' : 'Abstract'}
-                  </div>
-                  <p className="text-xl md:text-2xl font-serif italic leading-relaxed text-ink/70">
+                <div className="abstract-title">
+                  {lang === 'cn' ? '文章摘要' : 'Abstract'}
+                </div>
+                <div className="abstract-content-wrapper">
+                  <div className="abstract-drop-cap">“道”</div>
+                  <div className="abstract-text">
                     {summary}
-                  </p>
+                  </div>
                 </div>
               </motion.div>
             )}
