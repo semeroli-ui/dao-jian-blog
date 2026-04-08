@@ -10,7 +10,6 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import matter from 'gray-matter';
-import mermaid from 'mermaid';
 
 // Mermaid component to render diagrams using a stable CDN approach to avoid asset loading issues
 const Mermaid = React.memo(({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) => {
@@ -19,6 +18,7 @@ const Mermaid = React.memo(({ chart, theme }: { chart: string; theme: 'light' | 
   const containerRef = useRef<HTMLDivElement>(null);
   const isMounted = useRef(true);
   const renderedChartRef = useRef<string>('');
+  const isRendering = useRef(false);
 
   useEffect(() => {
     isMounted.current = true;
@@ -33,7 +33,9 @@ const Mermaid = React.memo(({ chart, theme }: { chart: string; theme: 'light' | 
       
       // Prevent redundant renders and jittering
       const cacheKey = chart + theme;
-      if (renderedChartRef.current === cacheKey) return;
+      if (renderedChartRef.current === cacheKey || isRendering.current) return;
+      
+      isRendering.current = true;
       
       try {
         // Ensure fonts are loaded before measurement to avoid width calculation errors
@@ -72,19 +74,17 @@ const Mermaid = React.memo(({ chart, theme }: { chart: string; theme: 'light' | 
             htmlLabels: true,
             useMaxWidth: false,
             curve: 'basis',
-            padding: 50, // Increased padding
+            padding: 50,
             nodeSpacing: 60,
             rankSpacing: 60
           }
         });
 
         // HACK: Add spaces around Chinese labels to force Mermaid to calculate a wider box
-        // This is the most reliable way to prevent truncation in SVG/HTML mixed rendering
         const sanitizedChart = chart.replace(/\[(.*?)\]/g, (match, p1) => `[ ${p1.trim()} ]`)
                                    .replace(/\{(.*?)\}/g, (match, p1) => `{ ${p1.trim()} }`)
                                    .replace(/\((.*?)\)/g, (match, p1) => `( ${p1.trim()} )`);
 
-        // Pass the containerRef as the third argument to provide context for measurement
         const { svg: renderedSvg } = await mermaid.render(id, sanitizedChart, containerRef.current || undefined);
         
         if (isMounted.current) {
@@ -95,15 +95,12 @@ const Mermaid = React.memo(({ chart, theme }: { chart: string; theme: 'light' | 
       } catch (err) {
         console.error('Mermaid render error:', err);
         if (isMounted.current) setError('Render Error');
+      } finally {
+        isRendering.current = false;
       }
     };
     
-    // Use requestAnimationFrame to ensure the DOM is ready and avoid jitter during rapid updates
-    const rafId = requestAnimationFrame(() => {
-      renderChart();
-    });
-    
-    return () => cancelAnimationFrame(rafId);
+    renderChart();
   }, [chart, theme]);
 
   if (error) {
@@ -118,7 +115,7 @@ const Mermaid = React.memo(({ chart, theme }: { chart: string; theme: 'light' | 
   return (
     <div 
       ref={containerRef}
-      className="mermaid-container flex justify-center my-16 overflow-x-auto w-full bg-mist p-8 rounded-sm border border-moss/10 shadow-sm transition-all duration-300 min-h-[300px]" 
+      className="mermaid-container flex justify-center my-16 overflow-x-auto w-full bg-mist p-8 rounded-sm border border-moss/10 shadow-sm min-h-[300px]" 
       dangerouslySetInnerHTML={{ __html: svg || '<div class="h-40 bg-moss/5 w-full rounded-sm flex items-center justify-center text-moss/20 text-xs uppercase tracking-widest">Preparing Diagram...</div>' }}
     />
   );
@@ -181,58 +178,62 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
 
   if (!post) return null;
 
-  const title = lang === 'cn' ? post.title_cn : post.title_en;
-  const rawContent = lang === 'cn' ? post.content_cn : post.content_en;
-  const category = lang === 'cn' ? post.category_cn : post.category_en;
+  // Memoize processed content to avoid recalculating on every scroll/render
+  const { processedContent, processedSummary, hasCustomAbstract, firstChar, title, category, readingTime, frontmatter } = React.useMemo(() => {
+    const title = lang === 'cn' ? post.title_cn : post.title_en;
+    const rawContent = lang === 'cn' ? post.content_cn : post.content_en;
+    const category = lang === 'cn' ? post.category_cn : post.category_en;
 
-  // Strip frontmatter and <!--more-->
-  const { data: frontmatter, content: cleanContent } = matter(rawContent || '');
-  const finalContent = cleanContent.replace(/<!--more-->/g, '').trim();
-  const summary = lang === 'cn' 
-    ? (frontmatter.summary_cn || frontmatter.summary || post.excerpt_cn) 
-    : (frontmatter.summary_en || frontmatter.summary || post.excerpt_en);
+    // Strip frontmatter and <!--more-->
+    const { data: frontmatter, content: cleanContent } = matter(rawContent || '');
+    const finalContent = cleanContent.replace(/<!--more-->/g, '').trim();
+    const summary = lang === 'cn' 
+      ? (frontmatter.summary_cn || frontmatter.summary || post.excerpt_cn) 
+      : (frontmatter.summary_en || frontmatter.summary || post.excerpt_en);
 
-  // Calculate reading time
-  const wordCount = finalContent?.length || 0;
-  const readingTime = Math.ceil(wordCount / (lang === 'cn' ? 300 : 200));
+    // Calculate reading time
+    const wordCount = finalContent?.length || 0;
+    const readingTime = Math.ceil(wordCount / (lang === 'cn' ? 300 : 200));
 
-  // Pre-process content to ensure Mermaid blocks, Tables, and HTML tags are correctly identified
-  // Also handle literal \n sequences that might come from the API
-  const processedContent = (finalContent || '')
-    .replace(/\\n/g, '\n')
-    // Normalize line endings
-    .replace(/\r\n/g, '\n')
-    // Ensure Mermaid blocks have blank lines before and after, and remove indentation
-    .replace(/[ \t]*```mermaid\s*([\s\S]*?)```/g, (match, p1) => {
-      const cleanMermaid = p1.split('\n').map(line => line.trim()).join('\n');
-      return `\n\n\`\`\`mermaid\n${cleanMermaid}\n\`\`\`\n\n`;
-    })
-    // Ensure HTML blocks have blank lines before and after to help rehype-raw
-    .replace(/(<div class="abstract-container">[\s\S]*?<\/div>)/g, '\n\n$1\n\n')
-    .replace(/(<div class="golden-sentence">[\s\S]*?<\/div>)/g, '\n\n$1\n\n')
-    // Ensure tables have a blank line before them
-    .replace(/([^\n])\n[ \t]*\|/g, '$1\n\n|')
-    // Ensure tables have a blank line after them
-    .replace(/\|\n([^\n|])/g, '|\n\n$1')
-    // Ensure table rows are not separated by extra spaces
-    .replace(/\|\s*\n\s*\|/g, '|\n|');
+    // Pre-process content to ensure Mermaid blocks, Tables, and HTML tags are correctly identified
+    const processedContent = (finalContent || '')
+      .replace(/\\n/g, '\n')
+      .replace(/\r\n/g, '\n')
+      .replace(/[ \t]*```mermaid\s*([\s\S]*?)```/g, (match, p1) => {
+        const cleanMermaid = p1.split('\n').map(line => line.trim()).join('\n');
+        return `\n\n\`\`\`mermaid\n${cleanMermaid}\n\`\`\`\n\n`;
+      })
+      .replace(/(<div class="abstract-container">[\s\S]*?<\/div>)/g, '\n\n$1\n\n')
+      .replace(/(<div class="golden-sentence">[\s\S]*?<\/div>)/g, '\n\n$1\n\n')
+      .replace(/([^\n])\n[ \t]*\|/g, '$1\n\n|')
+      .replace(/\|\n([^\n|])/g, '|\n\n$1')
+      .replace(/\|\s*\n\s*\|/g, '|\n|');
 
-  let processedSummary = (String(summary || ''))
-    .replace(/\\n/g, '\n')
-    .replace(/\r\n/g, '\n')
-    .replace(/[ \t]*```mermaid\s*([\s\S]*?)```/g, (match, p1) => {
-      const cleanMermaid = p1.split('\n').map(line => line.trim()).join('\n');
-      return `\n\n\`\`\`mermaid\n${cleanMermaid}\n\`\`\`\n\n`;
-    });
+    let processedSummary = (String(summary || ''))
+      .replace(/\\n/g, '\n')
+      .replace(/\r\n/g, '\n')
+      .replace(/[ \t]*```mermaid\s*([\s\S]*?)```/g, (match, p1) => {
+        const cleanMermaid = p1.split('\n').map(line => line.trim()).join('\n');
+        return `\n\n\`\`\`mermaid\n${cleanMermaid}\n\`\`\`\n\n`;
+      });
 
-  // Check if content already contains the abstract container to avoid double summary
-  const hasCustomAbstract = processedContent.includes('abstract-container');
+    const hasCustomAbstract = processedContent.includes('abstract-container');
+    const firstChar = title?.[0];
+    if (firstChar && processedSummary.startsWith(firstChar)) {
+      processedSummary = processedSummary.substring(1).trim();
+    }
 
-  // If the summary starts with the title's first character, strip it to avoid redundancy with the big "道" icon
-  const firstChar = title?.[0];
-  if (firstChar && processedSummary.startsWith(firstChar)) {
-    processedSummary = processedSummary.substring(1).trim();
-  }
+    return { 
+      processedContent, 
+      processedSummary, 
+      hasCustomAbstract, 
+      firstChar, 
+      title, 
+      category, 
+      readingTime,
+      frontmatter 
+    };
+  }, [post, lang]);
 
   return (
     <div className="min-h-screen bg-paper transition-colors duration-500 relative overflow-hidden">
@@ -303,7 +304,7 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
               {title}
             </motion.h1>
 
-            {summary && !hasCustomAbstract && (
+            {processedSummary && !hasCustomAbstract && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -320,7 +321,6 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
                   <div className="text-8xl font-serif text-moss/80 leading-none select-none pt-2">“{firstChar || '道'}”</div>
                   <div className="flex-1 text-xl md:text-2xl font-serif italic leading-[1.8] text-ink/80">
                     <ReactMarkdown 
-                      key={`summary-${processedSummary.length}`}
                       remarkPlugins={[remarkGfm]}
                       rehypePlugins={[rehypeRaw]}
                       components={{
@@ -366,7 +366,6 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
           >
             <div className="markdown-body drop-cap selection:bg-moss/20">
               <ReactMarkdown 
-                key={`content-${processedContent.length}`}
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw]}
                 components={{
@@ -423,7 +422,7 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
                 {String(processedContent || '').trim()}
               </ReactMarkdown>
 
-              {frontmatter.golden_sentence && (
+              {frontmatter?.golden_sentence && (
                 <div className="mt-24 text-center">
                   <p className="text-2xl md:text-3xl font-serif text-moss italic leading-relaxed">
                     核心金句：“{frontmatter.golden_sentence}”
