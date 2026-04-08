@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowLeft, Calendar, Tag, Share2, Home, Zap, Target, Compass } from 'lucide-react';
+import { ArrowLeft, Calendar, Tag, Share2, Globe, Landmark, Scale, User, Target } from 'lucide-react';
 import { Post } from './BlogCard';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
@@ -35,32 +35,29 @@ const Mermaid = ({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) =
         
         mermaid.initialize({ 
           startOnLoad: false, 
-          theme: isDark ? 'dark' : 'base',
+          theme: 'base',
           securityLevel: 'loose',
-          fontFamily: 'Inter, system-ui, sans-serif',
           themeVariables: {
             primaryColor: '#00896C',
             primaryTextColor: '#FFFFFF',
             primaryBorderColor: '#00896C',
             lineColor: '#00896C',
-            secondaryColor: isDark ? '#1E1E1E' : '#F2F0E9',
-            tertiaryColor: isDark ? '#121212' : '#FFFFFF',
-            fontSize: '15px',
+            secondaryColor: '#F2F0E9',
+            tertiaryColor: '#FFFFFF',
+            fontSize: '16px',
             mainBkg: '#00896C',
             nodeBorder: '#00896C',
-            clusterBkg: isDark ? '#1E1E1E' : '#F2F0E9',
+            clusterBkg: '#F2F0E9',
             titleColor: '#00896C',
-            edgeLabelBackground: isDark ? '#2D2D2D' : '#FDFCF8',
+            edgeLabelBackground: '#FFFFFF',
             nodeRadius: '2px',
-            fontFamily: 'Inter, system-ui, sans-serif',
-            // Explicitly set label colors to avoid theme conflicts
-            labelTextColor: isDark ? '#E5E1DA' : '#1A1A1A',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
           },
           flowchart: {
             htmlLabels: true,
-            useMaxWidth: false, // Disable auto-scaling to keep text crisp
+            useMaxWidth: true,
             curve: 'basis',
-            padding: 20
+            padding: 15
           }
         });
 
@@ -271,14 +268,17 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
-                className="abstract-container"
+                className="mb-20"
               >
-                <div className="abstract-title">
+                <h2 className="flex items-center gap-4 mb-10">
+                  <span className="w-10 h-10 bg-moss/5 rounded-sm flex items-center justify-center text-moss">
+                    <Target className="w-5 h-5" />
+                  </span>
                   {lang === 'cn' ? '文章摘要' : 'Abstract'}
-                </div>
-                <div className="abstract-content-wrapper flex-col sm:flex-row gap-6 sm:gap-10">
-                  <div className="abstract-drop-cap text-7xl sm:text-9xl">“道”</div>
-                  <div className="abstract-text text-lg sm:text-2xl prose prose-ink dark:prose-invert max-w-none">
+                </h2>
+                <div className="flex flex-col md:flex-row gap-8 items-start">
+                  <div className="text-8xl font-serif text-moss/80 leading-none select-none pt-2">“道”</div>
+                  <div className="flex-1 text-xl md:text-2xl font-serif italic leading-[1.8] text-ink/80">
                     <ReactMarkdown 
                       key={`summary-${processedSummary.length}`}
                       remarkPlugins={[remarkGfm]}
@@ -289,9 +289,6 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
                           if (!inline && isMermaid) {
                             const chart = content.replace(/^mermaid\n?/, '').replace(/^```mermaid\n?/, '').replace(/\n?```$/, '').trim();
                             return <Mermaid key={chart.substring(0, 50)} chart={chart} theme={theme} />;
-                          }
-                          if (!inline && !className && (content.startsWith('graph ') || content.startsWith('graph TD') || content.startsWith('graph LR'))) {
-                            return <Mermaid key={content.substring(0, 50)} chart={content} theme={theme} />;
                           }
                           return <code className={className} {...props}>{children}</code>;
                         }
@@ -332,14 +329,14 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
                 remarkPlugins={[remarkGfm]}
                 components={{
                   h2({ children, node }: any) {
-                    const icons = [Home, Zap, Target, Compass];
+                    const icons = [Globe, Landmark, Scale, User];
                     const h2Index = (node?.position?.start?.line || 0) % icons.length;
                     const Icon = icons[h2Index];
                     
                     return (
                       <h2 className="flex items-center gap-5 group">
-                        <span className="w-12 h-12 bg-moss/5 border border-moss/10 rounded-sm flex items-center justify-center text-moss shadow-sm group-hover:bg-moss/10 transition-colors">
-                          <Icon className="w-6 h-6" />
+                        <span className="w-10 h-10 bg-moss/5 border border-moss/10 rounded-sm flex items-center justify-center text-moss shadow-sm group-hover:bg-moss/10 transition-colors">
+                          <Icon className="w-5 h-5" />
                         </span>
                         <span className="flex-1">{children}</span>
                       </h2>
@@ -385,10 +382,9 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
               </ReactMarkdown>
 
               {frontmatter.golden_sentence && (
-                <div className="golden-sentence">
-                  <div className="golden-sentence-icon">核</div>
-                  <p className="text-2xl font-serif text-moss leading-relaxed">
-                    {frontmatter.golden_sentence}
+                <div className="mt-24 text-center">
+                  <p className="text-2xl md:text-3xl font-serif text-moss italic leading-relaxed">
+                    核心金句：“{frontmatter.golden_sentence}”
                   </p>
                 </div>
               )}
