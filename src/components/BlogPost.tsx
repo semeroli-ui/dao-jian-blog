@@ -42,7 +42,7 @@ const Mermaid = ({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) =
           startOnLoad: false, 
           theme: 'base',
           securityLevel: 'loose',
-          fontFamily: 'Inter, "Noto Serif SC", sans-serif',
+          fontFamily: '"Inter", "Noto Serif SC", sans-serif',
           themeVariables: {
             primaryColor: '#00896C',
             primaryTextColor: '#FFFFFF',
@@ -57,12 +57,13 @@ const Mermaid = ({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) =
             titleColor: '#00896C',
             edgeLabelBackground: '#FFFFFF',
             nodeRadius: '4px',
+            fontFamily: '"Inter", "Noto Serif SC", sans-serif',
           },
           flowchart: {
             htmlLabels: true,
             useMaxWidth: false,
             curve: 'basis',
-            padding: 40
+            padding: 60
           }
         });
 
