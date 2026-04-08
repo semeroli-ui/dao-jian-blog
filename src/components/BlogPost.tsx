@@ -38,8 +38,6 @@ const Mermaid = ({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) =
           theme: isDark ? 'dark' : 'base',
           securityLevel: 'loose',
           fontFamily: 'sans-serif',
-          // Suppress the default error output to avoid "Syntax error in text" spam
-          suppressError: true,
           themeVariables: {
             primaryColor: '#00896C',
             primaryTextColor: '#FFFFFF',
