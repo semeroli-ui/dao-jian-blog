@@ -231,7 +231,7 @@ async function startServer() {
         1. Use a sophisticated, international editorial style (Grand Editorial).
         2. The content MUST be in Markdown format.
         3. Include at least 3-4 sections, each starting with a level 2 header (##).
-        4. Include exactly one Mermaid flowchart (graph TD or graph LR) that explains the core logic of the article.
+        4. Include exactly one Mermaid flowchart (graph TD or graph LR) that explains the core logic of the article. Keep the text inside nodes concise (max 10 characters per node).
         5. The summary (excerpt) should be profound and poetic.
         6. Suggest a suitable category (e.g., 哲学, 科技, 商业, 认知).
         

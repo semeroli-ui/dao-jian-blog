@@ -51,13 +51,13 @@ const Mermaid = ({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) =
             titleColor: '#00896C',
             edgeLabelBackground: '#FFFFFF',
             nodeRadius: '4px',
-            fontFamily: 'Inter, system-ui, sans-serif',
+            fontFamily: '"Inter", "Noto Serif SC", system-ui, sans-serif',
           },
           flowchart: {
             htmlLabels: true,
             useMaxWidth: false,
             curve: 'basis',
-            padding: 20
+            padding: 40
           }
         });
 
