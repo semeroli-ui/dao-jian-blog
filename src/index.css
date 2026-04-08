@@ -185,15 +185,15 @@
 .mermaid-container .node label,
 .mermaid-container .edgeLabel {
   color: inherit !important;
-  font-family: system-ui, -apple-system, sans-serif !important;
+  font-family: Arial, Helvetica, sans-serif !important;
   text-align: center !important;
 }
 
 .mermaid-container .node .label {
   color: white !important;
-  padding: 8px 16px !important;
+  padding: 12px 24px !important;
   font-weight: 500 !important;
-  white-space: nowrap !important;
+  white-space: pre !important; /* Preserve the full-width spaces */
   font-size: 16px !important; /* Force correct size despite Mermaid config trick */
   display: flex !important;
   align-items: center !important;

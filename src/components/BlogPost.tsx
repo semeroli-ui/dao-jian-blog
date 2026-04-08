@@ -53,7 +53,7 @@ const Mermaid = React.memo(({ chart, theme }: { chart: string; theme: 'light' | 
           startOnLoad: false, 
           theme: 'base',
           securityLevel: 'loose',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
+          fontFamily: 'Arial, Helvetica, sans-serif',
           themeVariables: {
             primaryColor: '#00896C',
             primaryTextColor: '#FFFFFF',
@@ -61,22 +61,22 @@ const Mermaid = React.memo(({ chart, theme }: { chart: string; theme: 'light' | 
             lineColor: '#00896C',
             secondaryColor: '#F2F0E9',
             tertiaryColor: '#FFFFFF',
-            fontSize: '24px', // Trick Mermaid into calculating wider boxes
+            fontSize: '32px', // Even more aggressive trick to force wider boxes
             mainBkg: '#00896C',
             nodeBorder: '#00896C',
             clusterBkg: '#F2F0E9',
             titleColor: '#00896C',
             edgeLabelBackground: '#FFFFFF',
             nodeRadius: '4px',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: 'Arial, Helvetica, sans-serif',
           },
           flowchart: {
             htmlLabels: true,
             useMaxWidth: false,
             curve: 'basis',
-            padding: 60,
-            nodeSpacing: 60,
-            rankSpacing: 60
+            padding: 80, // Even more padding
+            nodeSpacing: 80,
+            rankSpacing: 80
           }
         });
 
@@ -208,6 +208,68 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
     };
   }, [post, lang]);
 
+  // Memoize Markdown components to prevent remounting and jittering
+  const markdownComponents = React.useMemo(() => ({
+    h2({ children, node }: any) {
+      const icons = [Globe, Landmark, Scale, User];
+      const h2Index = (node?.position?.start?.line || 0) % icons.length;
+      const Icon = icons[h2Index];
+      
+      return (
+        <h2 className="flex items-center gap-5 group">
+          <span className="w-10 h-10 bg-moss/5 border border-moss/10 rounded-sm flex items-center justify-center text-moss shadow-sm group-hover:bg-moss/10 transition-colors">
+            <Icon className="w-5 h-5" />
+          </span>
+          <span className="flex-1">{children}</span>
+        </h2>
+      );
+    },
+    code({ node, inline, className, children, ...props }: any) {
+      const content = String(children || '').trim();
+      const isMermaid = className?.includes('language-mermaid') || className?.includes('mermaid');
+      
+      if (!inline && isMermaid) {
+        const chart = content
+          .replace(/^mermaid\n?/, '')
+          .replace(/^```mermaid\n?/, '')
+          .replace(/\n?```$/, '')
+          .trim();
+        return <Mermaid key={chart} chart={chart} theme={theme} />;
+      }
+      
+      if (!inline && !className && (
+        content.startsWith('graph ') || 
+        content.startsWith('graph TD') || 
+        content.startsWith('graph LR') ||
+        content.startsWith('sequenceDiagram') ||
+        content.startsWith('pie') ||
+        content.startsWith('gantt') ||
+        content.startsWith('classDiagram') ||
+        content.startsWith('stateDiagram')
+      )) {
+        return <Mermaid key={content} chart={content} theme={theme} />;
+      }
+
+      return (
+        <code className={className} {...props}>
+          {children}
+        </code>
+      );
+    }
+  }), [theme]);
+
+  const summaryComponents = React.useMemo(() => ({
+    code({ node, inline, className, children, ...props }: any) {
+      const content = String(children || '').trim();
+      const isMermaid = className?.includes('language-mermaid') || className?.includes('mermaid');
+      if (!inline && isMermaid) {
+        const chart = content.replace(/^mermaid\n?/, '').replace(/^```mermaid\n?/, '').replace(/\n?```$/, '').trim();
+        return <Mermaid key={chart} chart={chart} theme={theme} />;
+      }
+      return <code className={className} {...props}>{children}</code>;
+    }
+  }), [theme]);
+
   useEffect(() => {
     const handleScroll = () => {
       const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
@@ -338,17 +400,7 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
                     <ReactMarkdown 
                       remarkPlugins={[remarkGfm]}
                       rehypePlugins={[rehypeRaw]}
-                      components={{
-                        code({ node, inline, className, children, ...props }: any) {
-                          const content = String(children || '').trim();
-                          const isMermaid = className?.includes('language-mermaid') || className?.includes('mermaid');
-                          if (!inline && isMermaid) {
-                            const chart = content.replace(/^mermaid\n?/, '').replace(/^```mermaid\n?/, '').replace(/\n?```$/, '').trim();
-                            return <Mermaid key={chart.substring(0, 50)} chart={chart} theme={theme} />;
-                          }
-                          return <code className={className} {...props}>{children}</code>;
-                        }
-                      }}
+                      components={summaryComponents}
                     >
                       {String(processedSummary || '').trim()}
                     </ReactMarkdown>
@@ -383,56 +435,7 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
               <ReactMarkdown 
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw]}
-                components={{
-                  h2({ children, node }: any) {
-                    const icons = [Globe, Landmark, Scale, User];
-                    const h2Index = (node?.position?.start?.line || 0) % icons.length;
-                    const Icon = icons[h2Index];
-                    
-                    return (
-                      <h2 className="flex items-center gap-5 group">
-                        <span className="w-10 h-10 bg-moss/5 border border-moss/10 rounded-sm flex items-center justify-center text-moss shadow-sm group-hover:bg-moss/10 transition-colors">
-                          <Icon className="w-5 h-5" />
-                        </span>
-                        <span className="flex-1">{children}</span>
-                      </h2>
-                    );
-                  },
-                  code({ node, inline, className, children, ...props }: any) {
-                    const content = String(children || '').trim();
-                    const isMermaid = className?.includes('language-mermaid') || className?.includes('mermaid');
-                    
-                    if (!inline && isMermaid) {
-                      // Clean the chart code - remove any markdown artifacts
-                      const chart = content
-                        .replace(/^mermaid\n?/, '')
-                        .replace(/^```mermaid\n?/, '')
-                        .replace(/\n?```$/, '')
-                        .trim();
-                      return <Mermaid key={chart.substring(0, 50)} chart={chart} theme={theme} />;
-                    }
-                    
-                    // Fallback for cases where mermaid might be in a generic code block but starts with graph/sequence etc.
-                    if (!inline && !className && (
-                      content.startsWith('graph ') || 
-                      content.startsWith('graph TD') || 
-                      content.startsWith('graph LR') ||
-                      content.startsWith('sequenceDiagram') ||
-                      content.startsWith('pie') ||
-                      content.startsWith('gantt') ||
-                      content.startsWith('classDiagram') ||
-                      content.startsWith('stateDiagram')
-                    )) {
-                      return <Mermaid key={content.substring(0, 50)} chart={content} theme={theme} />;
-                    }
-
-                    return (
-                      <code className={className} {...props}>
-                        {children}
-                      </code>
-                    );
-                  }
-                }}
+                components={markdownComponents}
               >
                 {String(processedContent || '').trim()}
               </ReactMarkdown>
