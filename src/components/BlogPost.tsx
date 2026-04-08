@@ -35,6 +35,7 @@ const Mermaid = ({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) =
         
         // Use dynamic import from CDN to ensure all chunks (like dagre) are loaded from the same CDN
         // This fixes the "Failed to fetch dynamically imported module" error in production
+        // @ts-ignore - Dynamic import from CDN
         const mermaidModule = await import(/* @vite-ignore */ 'https://cdn.jsdelivr.net/npm/mermaid@11.4.0/dist/mermaid.esm.min.mjs');
         const mermaid = mermaidModule.default;
 
@@ -50,7 +51,7 @@ const Mermaid = ({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) =
             lineColor: '#00896C',
             secondaryColor: '#F2F0E9',
             tertiaryColor: '#FFFFFF',
-            fontSize: '16px',
+            fontSize: '14px',
             mainBkg: '#00896C',
             nodeBorder: '#00896C',
             clusterBkg: '#F2F0E9',
@@ -63,7 +64,7 @@ const Mermaid = ({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) =
             htmlLabels: true,
             useMaxWidth: false,
             curve: 'basis',
-            padding: 60
+            padding: 80
           }
         });
 
@@ -178,7 +179,9 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
   const readingTime = Math.ceil(wordCount / (lang === 'cn' ? 300 : 200));
 
   // Pre-process content to ensure Mermaid blocks, Tables, and HTML tags are correctly identified
+  // Also handle literal \n sequences that might come from the API
   const processedContent = (finalContent || '')
+    .replace(/\\n/g, '\n')
     // Normalize line endings
     .replace(/\r\n/g, '\n')
     // Ensure Mermaid blocks have blank lines before and after, and remove indentation
@@ -197,11 +200,15 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
     .replace(/\|\s*\n\s*\|/g, '|\n|');
 
   let processedSummary = (String(summary || ''))
+    .replace(/\\n/g, '\n')
     .replace(/\r\n/g, '\n')
     .replace(/[ \t]*```mermaid\s*([\s\S]*?)```/g, (match, p1) => {
       const cleanMermaid = p1.split('\n').map(line => line.trim()).join('\n');
       return `\n\n\`\`\`mermaid\n${cleanMermaid}\n\`\`\`\n\n`;
     });
+
+  // Check if content already contains the abstract container to avoid double summary
+  const hasCustomAbstract = processedContent.includes('abstract-container');
 
   // If the summary starts with the title's first character, strip it to avoid redundancy with the big "道" icon
   const firstChar = title?.[0];
@@ -278,7 +285,7 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
               {title}
             </motion.h1>
 
-            {summary && (
+            {summary && !hasCustomAbstract && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

@@ -223,6 +223,7 @@
 .mermaid-container svg {
   max-width: 100% !important;
   height: auto !important;
+  min-width: 450px;
 }
 
 /* Abstract Section Styling */
