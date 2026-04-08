@@ -164,6 +164,25 @@
   display: none !important;
 }
 
+/* Mermaid HTML Label Fixes */
+.mermaid-container .label {
+  color: inherit !important;
+  line-height: normal !important;
+}
+
+.mermaid-container .node label,
+.mermaid-container .edgeLabel {
+  text-align: center !important;
+  text-justify: auto !important;
+  font-family: inherit !important;
+}
+
+.mermaid-container .edgeLabel {
+  background-color: transparent !important;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
 /* Abstract Section Styling */
 .abstract-container {
   @apply mb-24 py-12 border-y border-moss/10 relative;

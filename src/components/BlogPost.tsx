@@ -37,7 +37,7 @@ const Mermaid = ({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) =
           startOnLoad: false, 
           theme: isDark ? 'dark' : 'base',
           securityLevel: 'loose',
-          fontFamily: 'sans-serif',
+          fontFamily: '"Inter", "Noto Serif SC", sans-serif',
           themeVariables: {
             primaryColor: '#00896C',
             primaryTextColor: '#FFFFFF',
@@ -45,17 +45,20 @@ const Mermaid = ({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) =
             lineColor: '#00896C',
             secondaryColor: isDark ? '#1E1E1E' : '#F2F0E9',
             tertiaryColor: isDark ? '#121212' : '#FFFFFF',
-            fontSize: '14px',
+            fontSize: '16px',
             mainBkg: '#00896C',
             nodeBorder: '#00896C',
             clusterBkg: isDark ? '#1E1E1E' : '#F2F0E9',
             titleColor: '#00896C',
-            edgeLabelBackground: isDark ? '#121212' : '#FDFCF8',
-            nodeRadius: '2px',
-            fontFamily: 'sans-serif',
+            edgeLabelBackground: isDark ? '#2D2D2D' : '#FDFCF8',
+            nodeRadius: '4px',
+            fontFamily: '"Inter", "Noto Serif SC", sans-serif',
+            // Fix for edge labels and text contrast
+            labelTextColor: isDark ? '#E5E1DA' : '#1A1A1A',
+            tertiaryTextColor: isDark ? '#E5E1DA' : '#1A1A1A',
           },
           flowchart: {
-            htmlLabels: false, // CRITICAL: Use SVG text for perfect alignment
+            htmlLabels: true, // Re-enable for better CJK support
             useMaxWidth: true,
             curve: 'basis'
           }
@@ -95,8 +98,7 @@ const Mermaid = ({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) =
   return (
     <div 
       ref={containerRef}
-      className="mermaid-container flex justify-center my-16 overflow-x-auto w-full bg-mist p-8 rounded-sm border border-moss/10 shadow-sm transition-colors duration-500 font-serif" 
-      style={{ fontSize: '16px' }}
+      className="mermaid-container flex justify-center my-16 overflow-x-auto w-full bg-mist p-8 rounded-sm border border-moss/10 shadow-sm transition-colors duration-500" 
       dangerouslySetInnerHTML={{ __html: svg || '<div class="animate-pulse h-40 bg-moss/5 w-full rounded-sm flex items-center justify-center text-moss/20 text-xs uppercase tracking-widest">Rendering Diagram...</div>' }}
     />
   );
