@@ -137,50 +137,22 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
   const [scrollProgress, setScrollProgress] = useState(0);
   const t = translations[lang];
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = (window.scrollY / totalHeight) * 100;
-      setScrollProgress(progress);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        const res = await fetch(`/api/posts/${id}`);
-        if (!res.ok) throw new Error('Post not found');
-        const data = await res.json() as Post;
-        setPost(data);
-      } catch (err) {
-        console.error(err);
-        navigate('/');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPost();
-    window.scrollTo(0, 0);
-  }, [id, navigate]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-paper flex items-center justify-center">
-        <motion.div 
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className="w-8 h-8 border-2 border-ink/10 border-t-ink rounded-full"
-        />
-      </div>
-    );
-  }
-
-  if (!post) return null;
-
   // Memoize processed content to avoid recalculating on every scroll/render
+  // MUST be before any early returns to follow Rules of Hooks
   const { processedContent, processedSummary, hasCustomAbstract, firstChar, title, category, readingTime, frontmatter } = React.useMemo(() => {
+    if (!post) {
+      return {
+        processedContent: '',
+        processedSummary: '',
+        hasCustomAbstract: false,
+        firstChar: '',
+        title: '',
+        category: '',
+        readingTime: 0,
+        frontmatter: {}
+      };
+    }
+
     const title = lang === 'cn' ? post.title_cn : post.title_en;
     const rawContent = lang === 'cn' ? post.content_cn : post.content_en;
     const category = lang === 'cn' ? post.category_cn : post.category_en;
@@ -235,6 +207,48 @@ export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onS
       frontmatter 
     };
   }, [post, lang]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = (window.scrollY / totalHeight) * 100;
+      setScrollProgress(progress);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        const res = await fetch(`/api/posts/${id}`);
+        if (!res.ok) throw new Error('Post not found');
+        const data = await res.json() as Post;
+        setPost(data);
+      } catch (err) {
+        console.error(err);
+        navigate('/');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPost();
+    window.scrollTo(0, 0);
+  }, [id, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-paper flex items-center justify-center">
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="w-8 h-8 border-2 border-ink/10 border-t-ink rounded-full"
+        />
+      </div>
+    );
+  }
+
+  if (!post) return null;
 
   return (
     <div className="min-h-screen bg-paper transition-colors duration-500 relative overflow-hidden">
