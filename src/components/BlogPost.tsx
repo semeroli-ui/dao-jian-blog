@@ -37,7 +37,7 @@ const Mermaid = ({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) =
           startOnLoad: false, 
           theme: isDark ? 'dark' : 'base',
           securityLevel: 'loose',
-          fontFamily: '"Noto Serif SC", "Inter", serif',
+          fontFamily: 'sans-serif',
           // Suppress the default error output to avoid "Syntax error in text" spam
           suppressError: true,
           themeVariables: {
@@ -47,19 +47,19 @@ const Mermaid = ({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) =
             lineColor: '#00896C',
             secondaryColor: isDark ? '#1E1E1E' : '#F2F0E9',
             tertiaryColor: isDark ? '#121212' : '#FFFFFF',
-            fontSize: '16px',
+            fontSize: '14px',
             mainBkg: '#00896C',
             nodeBorder: '#00896C',
             clusterBkg: isDark ? '#1E1E1E' : '#F2F0E9',
             titleColor: '#00896C',
             edgeLabelBackground: isDark ? '#121212' : '#FDFCF8',
             nodeRadius: '2px',
-            fontFamily: '"Noto Serif SC", "Inter", serif',
+            fontFamily: 'sans-serif',
           },
           flowchart: {
-            htmlLabels: true,
+            htmlLabels: false, // CRITICAL: Use SVG text for perfect alignment
             useMaxWidth: true,
-            curve: 'basis' // More organic, "Daoist" style curves
+            curve: 'basis'
           }
         });
 
