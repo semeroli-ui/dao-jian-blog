@@ -13,11 +13,12 @@ import matter from 'gray-matter';
 import mermaid from 'mermaid';
 
 // Mermaid component to render diagrams using a stable CDN approach to avoid asset loading issues
-const Mermaid = ({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) => {
+const Mermaid = React.memo(({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) => {
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const isMounted = useRef(true);
+  const renderedChartRef = useRef<string>('');
 
   useEffect(() => {
     isMounted.current = true;
@@ -26,14 +27,20 @@ const Mermaid = ({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) =
     };
   }, []);
 
-  const renderedChartRef = useRef<string>('');
-
   useEffect(() => {
     const renderChart = async () => {
       if (!chart || chart.trim().length < 5) return;
-      if (renderedChartRef.current === chart + theme) return; // Prevent redundant renders
+      
+      // Prevent redundant renders and jittering
+      const cacheKey = chart + theme;
+      if (renderedChartRef.current === cacheKey) return;
       
       try {
+        // Ensure fonts are loaded before measurement to avoid width calculation errors
+        if ('fonts' in document) {
+          await document.fonts.ready;
+        }
+
         const id = `mermaid-${Math.random().toString(36).substring(2, 11)}`;
         
         // @ts-ignore - Dynamic import from CDN
@@ -65,24 +72,38 @@ const Mermaid = ({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) =
             htmlLabels: true,
             useMaxWidth: false,
             curve: 'basis',
-            padding: 40,
+            padding: 50, // Increased padding
             nodeSpacing: 60,
             rankSpacing: 60
           }
         });
 
-        const { svg: renderedSvg } = await mermaid.render(id, chart);
+        // HACK: Add spaces around Chinese labels to force Mermaid to calculate a wider box
+        // This is the most reliable way to prevent truncation in SVG/HTML mixed rendering
+        const sanitizedChart = chart.replace(/\[(.*?)\]/g, (match, p1) => `[ ${p1.trim()} ]`)
+                                   .replace(/\{(.*?)\}/g, (match, p1) => `{ ${p1.trim()} }`)
+                                   .replace(/\((.*?)\)/g, (match, p1) => `( ${p1.trim()} )`);
+
+        // Pass the containerRef as the third argument to provide context for measurement
+        const { svg: renderedSvg } = await mermaid.render(id, sanitizedChart, containerRef.current || undefined);
+        
         if (isMounted.current) {
           setSvg(renderedSvg);
           setError(null);
-          renderedChartRef.current = chart + theme;
+          renderedChartRef.current = cacheKey;
         }
       } catch (err) {
         console.error('Mermaid render error:', err);
         if (isMounted.current) setError('Render Error');
       }
     };
-    renderChart();
+    
+    // Use requestAnimationFrame to ensure the DOM is ready and avoid jitter during rapid updates
+    const rafId = requestAnimationFrame(() => {
+      renderChart();
+    });
+    
+    return () => cancelAnimationFrame(rafId);
   }, [chart, theme]);
 
   if (error) {
@@ -97,11 +118,11 @@ const Mermaid = ({ chart, theme }: { chart: string; theme: 'light' | 'dark' }) =
   return (
     <div 
       ref={containerRef}
-      className="mermaid-container flex justify-center my-16 overflow-x-auto w-full bg-mist p-8 rounded-sm border border-moss/10 shadow-sm transition-colors duration-500 min-h-[300px]" 
+      className="mermaid-container flex justify-center my-16 overflow-x-auto w-full bg-mist p-8 rounded-sm border border-moss/10 shadow-sm transition-all duration-300 min-h-[300px]" 
       dangerouslySetInnerHTML={{ __html: svg || '<div class="h-40 bg-moss/5 w-full rounded-sm flex items-center justify-center text-moss/20 text-xs uppercase tracking-widest">Preparing Diagram...</div>' }}
     />
   );
-};
+});
 
 export const BlogPost = ({ theme, toggleTheme, lang, toggleLang, onNavClick, onSubscribe }: { 
   theme: 'light' | 'dark'; 
